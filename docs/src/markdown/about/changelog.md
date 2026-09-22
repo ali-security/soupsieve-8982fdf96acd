@@ -8,6 +8,11 @@ icon: lucide/scroll-text
 -   **NEW**: Add new `ignore` option to API methods that allows the specification of specific pseudo-classes to be
     ignored. This can be used to exclude specific pseudo-classes that may present performance issues when accepted
     untrusted user inputs.
+-   **NEW**: Add `NOCACHE` flag that can be used to disable caching of `nth-*` family of selectors if issues are found
+    with the new caching approach.
+-   **FIX**: Improve performance of `nth-*` family of selectors in certain scenarios by employing caching. Caching makes
+    results more sensitive to mutating the tree via lazy iteration (e.g. `iselect()`). Read only operations are always
+    recommended when lazily iterating elements.
 -   **FIX**: Ensure `custom` is properly passed down from API functions to compilation.
 
 ## 2.9.2
