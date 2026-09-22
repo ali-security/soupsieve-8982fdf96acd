@@ -1,5 +1,7 @@
 """Test attribute selectors."""
+import threading
 from .. import util
+import soupsieve as sv
 
 
 class TestAttribute(util.TestCase):
@@ -50,3 +52,26 @@ class TestAttribute(util.TestCase):
             ["div", "0", "1", "2", "3", "pre", "4", "6"],
             flags=util.HTML5
         )
+
+    def test_bad_attribute_unclosed(self):
+        """Test bad, unclosed attribute fails for syntax error, not timeout error."""
+
+        results = []
+
+        def compile_pattern():
+            """Compile a pattern with an unclosed, quoted attribute value."""
+
+            try:
+                sv.compile('[a="' + ('x' * 300))
+            except BaseException as e:  # noqa: B036
+                results.append(e)
+
+        # Run in a thread so a catastrophic backtrack shows up as a timeout
+        # instead of hanging the test suite. `signal.alarm` is not portable.
+        thread = threading.Thread(target=compile_pattern)
+        thread.daemon = True
+        thread.start()
+        thread.join(10)
+        self.assertFalse(thread.is_alive(), 'Pattern compile timed out (ReDoS)')
+        self.assertTrue(results, 'Pattern compile did not fail')
+        self.assertIsInstance(results[0], sv.SelectorSyntaxError)
